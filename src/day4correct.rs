@@ -65,12 +65,13 @@ impl Board {
     }
 }
 
-pub fn part1() -> i32 {
-    let mut lines = utils::read_lines("./inputs/day4.txt").unwrap();
+fn parse_boards_and_callouts(file_name: &str) -> (Vec<Board>, Vec<String>) {
+    // read our input
+    let mut lines = utils::read_lines(file_name).unwrap();
 
     // grab the callouts for each
     let callout_str = lines.next().unwrap().unwrap();
-    let callouts: Vec<&str> = callout_str.split(",").collect();
+    let callouts: Vec<String> = callout_str.split(",").map(str::to_string).collect();
 
     // create our boards
     let mut boards: Vec<Board> = Vec::new();
@@ -84,11 +85,16 @@ pub fn part1() -> i32 {
             board.tiles.append(&mut row);
         }
     }
+    (boards, callouts)
+}
+
+pub fn part1() -> i32 {
+    let (mut boards, callouts) = parse_boards_and_callouts("./inputs/day4.txt");
 
     // callout the numbers on each board
     for callout in callouts {
         for b in boards.iter_mut() {
-            b.mark(callout);
+            b.mark(&callout);
             if b.is_winner() {
                 let sum = b.sum_of_unmarked();
                 let call = callout.parse::<i32>().expect("Can't parse callout int");
@@ -97,4 +103,26 @@ pub fn part1() -> i32 {
         }
     }
     -1
+}
+
+pub fn part2() -> i32 {
+    let (mut boards, callouts) = parse_boards_and_callouts("./inputs/day4.txt");
+
+    // callout the numbers on each board
+    let mut last_winner_idx = 0;
+    let mut last_callout = "".to_string();
+    for callout in callouts {
+        for (i, b) in boards.iter_mut().enumerate() {
+            if !b.is_winner() {
+                b.mark(&callout);
+                if b.is_winner() {
+                    last_winner_idx = i;
+                    last_callout = callout.to_string();
+                }
+            }
+        }
+    }
+    let sum = boards.get(last_winner_idx).unwrap().sum_of_unmarked();
+    let call = last_callout.parse::<i32>().expect("Can't parse callout int");
+    sum * call
 }
